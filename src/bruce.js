@@ -60,7 +60,7 @@ export class Bruce {
         <div class="bruce__body" id="bruce-body"></div>
         <form class="bruce__ask" autocomplete="off">
           <input class="bruce__input" type="text" name="q"
-            placeholder="Ask Bruce about OEE on this page" aria-label="Ask Bruce about OEE on this page" />
+            placeholder="Ask Bruce anything about this plant" aria-label="Ask Bruce anything about this plant" />
           <button class="bruce__mic" type="button" data-act="voice" aria-label="Talk to Bruce">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>
           </button>
