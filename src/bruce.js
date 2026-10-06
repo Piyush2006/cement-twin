@@ -354,16 +354,13 @@ export class Bruce {
   }
 
   /**
-   * The opening state of Insights: the plant-level figures the twin no longer
-   * carries, then every instrumented area ranked weakest-first with whatever is
-   * open on it. Clicking an area focuses it in the 3D view.
+   * The opening state of Insights: the three plant-level figures the twin itself
+   * no longer carries. Anything finer comes from asking.
    */
   #overview() {
-    const rows = this.#scored().sort((a, b) => a.oee.oee - b.oee.oee);
-    if (!rows.length) return '';
+    if (!this.#scored().length) return '';
     const k = this.sim.plantKpis(this.areas.map((a) => a.id));
     const band = (v) => (v >= 85 ? 'good' : v >= 70 ? 'warn' : 'crit');
-
     return `
       <div class="ov">
         <div class="ov__kpis">
@@ -371,20 +368,6 @@ export class Bruce {
           <span class="ov__kpi" data-band="${band(k.health)}"><i>Plant Health</i><b>${k.health.toFixed(0)}</b><u>/100</u></span>
           <span class="ov__kpi"><i>Energy</i><b>${k.energy.sec.toFixed(0)}</b><u>kcal/kg</u></span>
         </div>
-        <span class="ov__label">Areas, weakest first</span>
-        <ul class="ov__areas">
-          ${rows.map((r) => {
-            const c = r.counts;
-            const open = c.crit || c.warn
-              ? `<span class="ov__alarm" data-sev="${c.crit ? 'crit' : 'warn'}">${
-                  c.crit ? `${c.crit} critical` : `${c.warn} warning`}</span>`
-              : '<span class="ov__ok">clear</span>';
-            return `<li><button type="button" data-area="${r.area.id}">
-              <span class="ov__name">${r.area.name}</span>
-              <span class="ov__oee" data-band="${band(r.oee.oee)}">${r.oee.oee.toFixed(0)}%</span>
-              ${open}</button></li>`;
-          }).join('')}
-        </ul>
       </div>`;
   }
 
