@@ -707,7 +707,6 @@ body { overflow: hidden; }
   padding: 7px 9px;
   background: var(--surface-raised);
   border: 1px solid var(--hairline);
-  border-left: 2px solid var(--hairline-strong);
   border-radius: 6px;
 }
 .kpicard i {
@@ -723,13 +722,21 @@ body { overflow: hidden; }
   text-decoration: none; margin-left: 3px;
   font-size: 9.5px; font-weight: 600; color: var(--text-faint);
 }
+/* State reads as a dot beside the word, the same signal the BRUCE status board
+   uses — not a coloured tab down the side of the card. */
 .kpicard em {
   grid-area: status; font-style: normal;
+  display: inline-flex; align-items: center; gap: 5px;
   font-size: 10px; font-weight: 600; color: var(--text-faint);
 }
-.kpicard[data-band='good'] { border-left-color: var(--band-good); }
-.kpicard[data-band='warn'] { border-left-color: var(--band-warn); }
-.kpicard[data-band='crit'] { border-left-color: var(--band-crit); }
+.kpicard em::before {
+  content: ''; width: 6px; height: 6px; border-radius: 50%;
+  background: var(--hairline-strong); flex: none;
+}
+.kpicard[data-band='none'] em::before { display: none; }
+.kpicard[data-band='good'] em::before { background: var(--band-good); }
+.kpicard[data-band='warn'] em::before { background: var(--band-warn); }
+.kpicard[data-band='crit'] em::before { background: var(--band-crit); }
 .kpicard[data-band='good'] em { color: var(--band-good); }
 .kpicard[data-band='warn'] em { color: var(--band-warn); }
 .kpicard[data-band='crit'] em { color: var(--band-crit); }
