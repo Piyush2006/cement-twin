@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Cement Plant Digital Twin</title>
+    <meta name="description" content="Live 3D digital twin of a cement plant — pyro line, clinker and cement silo telemetry." />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=TASA+Orbiter:wght@500;600;700;800&family=Outfit:wght@300;400;500;600;700&family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23051320'/%3E%3Cpath d='M7 24V11l9-5 9 5v13' stroke='%231655F2' stroke-width='2.4' fill='none'/%3E%3Cpath d='M12 24v-7h8v7' stroke='%23B4FF6B' stroke-width='2' fill='none'/%3E%3C/svg%3E" />
+    <script type="module" crossorigin src="/cement-twin/assets/index-rk1kd29k.js"></script>
+    <link rel="stylesheet" crossorigin href="/cement-twin/assets/index-CMRKAsU2.css">
+  </head>
+  <body>
+    <div id="app" class="app" aria-busy="true"></div>
+
+    <!-- Sibling of #app, not a child: the HUD renders itself with
+         `innerHTML` on #app, which would otherwise wipe this overlay out
+         the instant it is constructed — i.e. before the model loads. -->
+    <div class="boot" id="boot">
+      <div class="boot__inner">
+        <div class="boot__mark" aria-hidden="true"></div>
+        <p class="boot__title">Cement Plant Digital Twin</p>
+        <div class="boot__bar"><span id="boot-fill" class="boot__fill"></span></div>
+        <p class="boot__status" id="boot-status">Loading plant geometry…</p>
+      </div>
+    </div>
+  </body>
+</html>
