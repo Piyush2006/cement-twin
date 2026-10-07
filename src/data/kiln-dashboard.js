@@ -85,7 +85,7 @@ export const SECTIONS = [
   },
   {
     no: 6, name: 'Kiln Feed', icon: 'trend',
-    metrics: [m('KILN_FEED', 'Kiln Feed', 'TPH', 536.43, 3.2, 538.28, 540.64, 543.0)],
+    metrics: [m('KILN_FEED', 'Kiln Feed', 'TPH', 540.64, 2.0, 538.28, 540.64, 543.0)],
   },
 ];
 

@@ -632,3 +632,62 @@ body { overflow: hidden; }
 .switch__box:checked + .switch__track { background: var(--blue-500); }
 .switch__box:checked + .switch__track .switch__knob { transform: translateX(12px); }
 .switch__box:focus-visible + .switch__track { outline: 2px solid var(--blue-300); outline-offset: 2px; }
+
+/* ---------- BRUCE: the kiln status board ----------
+   A KPI reads as three facts side by side — value, the limit it is judged
+   against, and the verdict. The limit column is always shown so a red dot is
+   never something the operator has to take on trust. */
+.kpi { margin: 10px 0 4px; }
+.kpi__table { width: 100%; border-collapse: collapse; font-size: 11.5px; margin-bottom: 4px; }
+.kpi__table thead th {
+  text-align: left; font-weight: 600; font-size: 10px; letter-spacing: 0.04em;
+  text-transform: uppercase; color: var(--text-faint);
+  padding: 0 0 5px; border-bottom: 1px solid var(--hairline);
+}
+.kpi__table tbody th {
+  text-align: left; font-weight: 600; color: var(--text-strong); padding: 7px 8px 7px 0;
+}
+.kpi__table td { padding: 7px 8px 7px 0; color: var(--text-body); vertical-align: baseline; }
+.kpi__table tbody tr + tr th,
+.kpi__table tbody tr + tr td { border-top: 1px solid var(--hairline); }
+.kpi__val { font-variant-numeric: tabular-nums; font-weight: 600; color: var(--text-strong); white-space: nowrap; }
+.kpi__val u { text-decoration: none; font-size: 10px; color: var(--text-faint); }
+.kpi__lim { font-variant-numeric: tabular-nums; color: var(--text-muted); white-space: nowrap; }
+.kpi__st { white-space: nowrap; font-weight: 600; }
+.kpi__dot {
+  display: inline-block; width: 7px; height: 7px; border-radius: 50%;
+  margin-right: 6px; background: var(--hairline-strong); vertical-align: middle;
+}
+[data-status="normal"] .kpi__dot { background: var(--status-good); }
+[data-status="high"] .kpi__dot,
+[data-status="low"] .kpi__dot { background: var(--status-crit); }
+[data-status="normal"] .kpi__st { color: var(--status-good); }
+[data-status="high"] .kpi__st,
+[data-status="low"] .kpi__st { color: var(--status-crit); }
+
+.kpi__watch { list-style: none; margin: 2px 0 0; padding: 0; font-size: 11.5px; }
+.kpi__watch li { display: flex; align-items: baseline; gap: 8px; padding: 4px 0; }
+.kpi__watch i { font-style: normal; color: var(--text-muted); flex: 1; }
+.kpi__watch b { font-variant-numeric: tabular-nums; color: var(--text-strong); }
+.kpi__watch em { font-style: normal; font-size: 10px; font-weight: 600; color: var(--status-crit); }
+
+.kpi__causes { list-style: none; margin: 2px 0 8px; padding: 0; }
+.kpi__causes li { padding: 6px 0; border-top: 1px solid var(--hairline); font-size: 11.5px; }
+.kpi__causes li:first-child { border-top: 0; }
+.kpi__causes b { display: block; color: var(--text-strong); font-weight: 600; margin-bottom: 2px; }
+.kpi__causes span { color: var(--text-body); }
+
+/* Confidence is stated, not implied — the reason for it follows underneath. */
+.kpi__conf { display: flex; align-items: center; gap: 8px; margin: 8px 0 2px; font-size: 11.5px; }
+.kpi__conf span {
+  font-size: 10px; letter-spacing: 0.04em; text-transform: uppercase; color: var(--text-faint);
+}
+.kpi__conf b { color: var(--status-warn); font-weight: 600; }
+
+.kpi__acts { margin: 2px 0 8px; padding-left: 18px; font-size: 11.5px; color: var(--text-body); }
+.kpi__acts li { padding: 3px 0; }
+.kpi__chain {
+  margin: 2px 0 0; font-size: 10.5px; color: var(--text-muted);
+  background: var(--tint-blue); border: 1px solid var(--hairline);
+  padding: 7px 9px; line-height: 1.5;
+}

@@ -12,9 +12,15 @@
  */
 
 import { OEE_BAND } from './data/equipment.js';
+import {
+  headlineKpis, watchlist, shcContributors,
+  SHC_ACTIONS, SHC_CHAIN, SHC_CONFIDENCE,
+} from './data/kiln-advisor.js';
 import { INSIGHT, RCA } from './data/rca.js';
 
 const pct = (v, d = 1) => `${v.toFixed(d)}%`;
+
+const STATUS_WORD = { high: 'High', low: 'Low', normal: 'Normal', none: '\u2014' };
 
 /** Swap `public/bruce-logo.svg` to change the mark everywhere it appears. */
 const LOGO = '<img class="bruce__logo" src="bruce-logo.svg" alt="" width="40" height="40" />';
@@ -119,6 +125,10 @@ export class Bruce {
       if (q) { this.input.value = ''; this.#ask(q); }
     });
     this.bodyEl.addEventListener('click', (e) => {
+      // a follow-up chip asks its own question, so the operator can walk the
+      // flow without retyping
+      const ask = e.target.closest('[data-ask]')?.dataset.ask;
+      if (ask) { this.#ask(ask); return; }
       const id = e.target.closest('[data-area]')?.dataset.area;
       if (id) this.onFocusArea?.(id);
     });
@@ -171,6 +181,66 @@ export class Bruce {
       .map((a) => ({ a, c: this.sim.countsOfArea(a.id) }))
       .filter((r) => r.c.warn || r.c.crit)
       .sort((x, y) => (y.c.crit - x.c.crit) || (y.c.warn - x.c.warn));
+
+    // ---- the kiln operator flow -------------------------------------------
+    // Status → why → what to do. These sit ahead of the generic handlers so the
+    // pyro line answers with its own KPI board rather than the area assessment.
+    const onKiln = /kiln|pyro|shc|burning zone|preheater|calciner/.test(lower);
+    const S = this.sim.state;
+
+    if (onKiln && /how is|how's|hows|running|doing|status|health|performing/.test(lower)) {
+      const kpis = headlineKpis(S);
+      const watch = watchlist(S);
+      const off = kpis.filter((k) => k.status === 'high' || k.status === 'low');
+      this.kilnTopic = off.some((k) => k.label === 'SHC') ? 'shc' : null;
+      return {
+        kind: 'kiln-status',
+        kpis,
+        watch,
+        steps: [
+          'reading the pyro-line faceplate tags',
+          'comparing each KPI against its configured limit',
+          off.length
+            ? `${off.length} KPI${off.length === 1 ? '' : 's'} outside limits`
+            : 'every headline KPI within limits',
+        ],
+        answer: off.length
+          ? `${off.length} of ${kpis.length} headline KPIs are outside their limits.`
+          : 'All four headline KPIs are within their limits.',
+      };
+    }
+
+    if (onKiln && /why|cause|driving|reason/.test(lower) && /shc|heat consumption|specific heat|high/.test(lower)) {
+      const shc = headlineKpis(S).find((k) => k.label === 'SHC');
+      const causes = shcContributors(S);
+      this.kilnTopic = 'shc';
+      return {
+        kind: 'kiln-why',
+        shc,
+        causes,
+        steps: [
+          'reading SHC against the plant target',
+          'scanning heat-recovery and excess-air tags',
+          causes.length
+            ? `${causes.length} contributor${causes.length === 1 ? '' : 's'} supported by current data`
+            : 'no contributor is outside its band right now',
+        ],
+        answer: causes.length
+          ? `SHC is above target; ${causes.length} contributor${causes.length === 1 ? '' : 's'} are visible in the current data.`
+          : 'SHC is above target, but no single contributor is outside its band right now.',
+      };
+    }
+
+    if (this.kilnTopic === 'shc' && /what should we do|what do we do|what now|recommend|action|next step|fix|how do we/.test(lower)) {
+      return {
+        kind: 'kiln-actions',
+        steps: [
+          'ordering the checks by what the data points at',
+          'mapping each to a trend the faceplate already carries',
+        ],
+        answer: `${SHC_ACTIONS.length} checks, in the order to run them.`,
+      };
+    }
 
     // "How is my Kiln doing?" — one natural question, the whole assessment back.
     if (area && /how is|how's|hows|status of|assess|doing|health of|report on/.test(lower)) {
@@ -395,6 +465,9 @@ export class Bruce {
           .map((x) => `<li data-state="done"><span class="bruce__bullet" aria-hidden="true"></span>${x}</li>`).join('')}</ul>`;
       }
       if (m.assessment) return this.#renderAssessment(m);
+      if (m.kiln === 'status') return this.#renderKilnStatus(m);
+      if (m.kiln === 'why') return this.#renderKilnWhy(m);
+      if (m.kiln === 'actions') return this.#renderKilnActions();
       return `<p class="bruce__a">${m.text}</p>`
         + (m.chips?.length ? `<div class="bruce__chips">${m.chips
           .map((a) => `<button class="bruce__chip" type="button" data-area="${a.id}">${a.name}</button>`).join('')}</div>` : '');
@@ -468,6 +541,76 @@ export class Bruce {
       </section>`;
   }
 
+  /**
+   * The kiln status board.
+   *
+   * Four headline KPIs against their configured limits, then the secondary
+   * readings. The limit column is shown next to every value so the status dot
+   * is never something the operator has to take on trust.
+   */
+  #renderKilnStatus(m) {
+    const num = (k) => (k.value == null ? '\u2014' : k.value.toFixed(k.decimals));
+    const row = (k) => `
+      <tr data-status="${k.status}">
+        <th scope="row">${k.label}</th>
+        <td class="kpi__val">${num(k)} <u>${k.unit}</u></td>
+        <td class="kpi__lim">${k.limit || '\u2014'}</td>
+        <td class="kpi__st"><span class="kpi__dot"></span>${STATUS_WORD[k.status]}</td>
+      </tr>`;
+    return `
+      <section class="kpi">
+        <h5 class="as__h">Status</h5>
+        <table class="kpi__table">
+          <thead><tr><th>KPI</th><th>Actual</th><th>Plant target / limit</th><th>Status</th></tr></thead>
+          <tbody>${m.kpis.map(row).join('')}</tbody>
+        </table>
+        <h5 class="as__h">Also flagged</h5>
+        <ul class="kpi__watch">${m.watch.map((w) => `
+          <li data-status="${w.status}"><i>${w.label}</i><b>${num(w)} ${w.unit}</b>${
+            w.status === 'low' || w.status === 'high' ? `<em>${STATUS_WORD[w.status]}</em>` : ''
+          }</li>`).join('')}</ul>
+        ${this.#followUps(['Why is SHC high?', 'What should we do?'])}
+      </section>`;
+  }
+
+  /** Why SHC is high — only the contributors the current readings support. */
+  #renderKilnWhy(m) {
+    const shc = m.shc;
+    const over = shc?.value != null ? shc.value : null;
+    return `
+      <section class="kpi">
+        <h5 class="as__h">Likely contributors</h5>
+        <p class="as__p">SHC is ${over == null ? 'unavailable' : `${over.toFixed(2)} kcal/kg`}${
+          shc?.limit ? `, against a plant target of ${shc.limit.replace('\u2264 ', '')} kcal/kg` : ''
+        }.</p>
+        ${m.causes.length
+          ? `<ul class="kpi__causes">${m.causes.map((c) => `
+              <li><b>${c.title}</b><span>${c.detail}</span></li>`).join('')}</ul>`
+          : '<p class="as__p">No contributor is outside its band at this moment.</p>'}
+        <p class="kpi__conf"><span>Confidence</span><b>${SHC_CONFIDENCE.level}</b></p>
+        <p class="as__p">${SHC_CONFIDENCE.because}</p>
+        ${this.#followUps(['What should we do?'])}
+      </section>`;
+  }
+
+  /** The checks to run, and the chain they came from. */
+  #renderKilnActions() {
+    return `
+      <section class="kpi">
+        <h5 class="as__h">Recommended action</h5>
+        <ol class="kpi__acts">${SHC_ACTIONS.map((a) => `<li>${a}</li>`).join('')}</ol>
+        <h5 class="as__h">Logic</h5>
+        <p class="kpi__chain">${SHC_CHAIN.join(' \u2192 ')}</p>
+      </section>`;
+  }
+
+  /** Chips that ask the next question in the flow. */
+  #followUps(qs) {
+    return `<div class="bruce__chips">${qs
+      .map((q) => `<button class="bruce__chip" type="button" data-ask="${q}">${q}</button>`)
+      .join('')}</div>`;
+  }
+
   async #ask(q) {
     if (!this.open) this.toggle(true);
     this.tab = 'insights';
@@ -481,7 +624,7 @@ export class Bruce {
     // Pace the trail so an assessment lands at about 6.5 s and a short answer at
     // about 3 s. (Measured higher under a software renderer, where frames are
     // slow enough to delay the timers.)
-    const total = res.kind === 'assessment' ? 6500 : 3000;
+    const total = (res.kind === 'assessment' || res.kind === 'kiln-status') ? 6500 : 3000;
     const per = Math.max(260, Math.round(total / (steps.length + 1)));
     for (const step of steps) {
       await new Promise((r) => setTimeout(r, per));
@@ -489,9 +632,17 @@ export class Bruce {
       this.#render();
     }
     await new Promise((r) => setTimeout(r, per));
-    this.thread.push(res.kind === 'assessment'
-      ? { role: 'bot', assessment: true, area: res.area, data: res.data, insight: res.insight }
-      : { role: 'bot', text: answer, chips });
+    if (res.kind === 'assessment') {
+      this.thread.push({ role: 'bot', assessment: true, area: res.area, data: res.data, insight: res.insight });
+    } else if (res.kind === 'kiln-status') {
+      this.thread.push({ role: 'bot', kiln: 'status', kpis: res.kpis, watch: res.watch });
+    } else if (res.kind === 'kiln-why') {
+      this.thread.push({ role: 'bot', kiln: 'why', shc: res.shc, causes: res.causes });
+    } else if (res.kind === 'kiln-actions') {
+      this.thread.push({ role: 'bot', kiln: 'actions' });
+    } else {
+      this.thread.push({ role: 'bot', text: answer, chips });
+    }
     this.#render();
   }
 }
