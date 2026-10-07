@@ -632,6 +632,13 @@ export class Bruce {
       this.#render();
     }
     await new Promise((r) => setTimeout(r, per));
+
+    // The trail is a progress indicator, not a record: once the answer is on
+    // screen it has nothing left to say, so it comes out rather than pushing
+    // every earlier exchange further up the thread.
+    const ti = this.thread.indexOf(trail);
+    if (ti !== -1) this.thread.splice(ti, 1);
+
     if (res.kind === 'assessment') {
       this.thread.push({ role: 'bot', assessment: true, area: res.area, data: res.data, insight: res.insight });
     } else if (res.kind === 'kiln-status') {
