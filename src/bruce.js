@@ -50,7 +50,7 @@ export class Bruce {
         <nav class="bruce__tabs" role="tablist">
           <button class="bruce__tab" type="button" role="tab" data-tab="recommendations" aria-selected="false">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
-            Recommendations<span class="bruce__count" data-count>0</span>
+            Recommendations
           </button>
           <button class="bruce__tab" type="button" role="tab" data-tab="insights" aria-selected="true">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/></svg>
@@ -92,7 +92,6 @@ export class Bruce {
     this.bodyEl = this.el.querySelector('#bruce-body');
     this.input = this.el.querySelector('.bruce__input');
     this.dot = this.el.querySelector('[data-dot]');
-    this.countEl = this.el.querySelector('[data-count]');
     this.voice = this.el.querySelector('.voice');
     this.voiceStatus = this.el.querySelector('.voice__status');
     this.voiceSteps = this.el.querySelector('.voice__steps');
@@ -322,8 +321,6 @@ export class Bruce {
 
   /** The dot earns its place: it appears only when an area is actually critical. */
   #refreshBadge() {
-    const n = this.#recommendations().length;
-    this.countEl.textContent = n;
     const urgent = this.#scored().some((r) => OEE_BAND(r.oee.oee) === 'crit')
       || this.areas.some((a) => this.sim.countsOfArea(a.id).crit > 0);
     this.dot.hidden = !urgent;
@@ -338,37 +335,24 @@ export class Bruce {
     });
   }
 
-  /** The narrative summary: plant OEE, the laggard, and what it is worth. */
-  #summary() {
-    const rows = this.#scored();
-    if (!rows.length) return 'No instrumented areas are reporting on this page.';
-    const avg = rows.reduce((t, r) => t + r.oee.oee, 0) / rows.length;
-    const worst = [...rows].sort((a, b) => a.oee.oee - b.oee.oee)[0];
-    const ins = INSIGHT[worst.area.id];
-    const weakest = worst.oee.a <= worst.oee.p ? 'Availability' : 'Performance';
-    return `This line's OEE is currently at ${pct(avg)}, indicating a need for improvement, `
-      + `particularly in ${weakest} and Quality metrics. ${worst.area.name} is significantly `
-      + `underperforming with an OEE of only ${pct(worst.oee.oee)}, which is dragging down overall `
-      + `plant efficiency. Addressing this area's issues could yield substantial gains in output`
-      + `${ins ? `, worth around ${ins.impact.replace('~', '')}` : ''}.`;
-  }
-
-  /**
-   * The opening state of Insights: the three plant-level figures the twin itself
-   * no longer carries. Anything finer comes from asking.
-   */
+  /** The opening state of Insights: the plant, and nothing else. */
   #overview() {
     if (!this.#scored().length) return '';
     const k = this.sim.plantKpis(this.areas.map((a) => a.id));
-    const band = (v) => (v >= 85 ? 'good' : v >= 70 ? 'warn' : 'crit');
+    const band = (v) => (v == null ? 'none' : v >= 85 ? 'good' : v >= 70 ? 'warn' : 'crit');
+    const row = (label, value, bd = 'none') =>
+      `<li><span class="ov__k">${label}</span><span class="ov__v" data-band="${bd}">${value}</span></li>`;
+
     return `
-      <div class="ov">
-        <div class="ov__kpis">
-          <span class="ov__kpi"><i>Total Production</i><b>${k.production.value.toFixed(0)}</b><u>t/h</u></span>
-          <span class="ov__kpi" data-band="${band(k.health)}"><i>Plant Health</i><b>${k.health.toFixed(0)}</b><u>/100</u></span>
-          <span class="ov__kpi"><i>Energy</i><b>${k.energy.sec.toFixed(0)}</b><u>kcal/kg</u></span>
-        </div>
-      </div>`;
+      <section class="ov">
+        <h4 class="ov__title">Plant Overview</h4>
+        <ul class="ov__rows">
+          ${row('Plant Health', `${k.health.toFixed(0)}/100`, band(k.health))}
+          ${k.oee == null ? '' : row('OEE', `${k.oee.toFixed(1)}%`, band(k.oee))}
+          ${row('Production', `${k.production.value.toFixed(0)} TPH`)}
+          ${row('Energy', `${k.energy.sec.toFixed(0)} kcal/kg`)}
+        </ul>
+      </section>`;
   }
 
   #render() {
@@ -415,7 +399,7 @@ export class Bruce {
         + (m.chips?.length ? `<div class="bruce__chips">${m.chips
           .map((a) => `<button class="bruce__chip" type="button" data-area="${a.id}">${a.name}</button>`).join('')}</div>` : '');
     }).join('');
-    return `<p class="bruce__a">${this.#summary()}</p>${this.#overview()}${thread}`;
+    return `${this.#overview()}${thread}`;
   }
 
   /**

@@ -11,6 +11,7 @@ import { PlantViewer } from './viewer.js';
 import { Simulator } from './sim.js';
 import { Stage } from './stage.js';
 import { Bruce } from './bruce.js';
+import { KilnDashboard } from './dashboard.js';
 import { VIEWS, PROFILES } from './data/process.js';
 import { ALL_AREAS } from './data/areas.js';
 
@@ -48,6 +49,8 @@ function areaStatus(sim, area) {
     sec: a.sec?.value ?? null,
     secUnit: a.sec?.unit ?? '',
     costMtd: area.costMtd,
+    // only the kiln has a faceplate built so far
+    hasDashboard: area.id === 'kiln',
   };
 }
 
@@ -62,8 +65,13 @@ async function start() {
 
   const stage = new Stage(app);
 
-  let bruce;
-  const viewer = new PlantViewer(stage.stageEl, model, ALL_AREAS, VIEWS);
+  // Built before the tick loop that drives it: the loop calls update() on the
+  // first pass, so a later construction leaves the first tick throwing.
+  const dashboard = new KilnDashboard(app, { sim, onClose: () => viewer.resize() });
+
+  const viewer = new PlantViewer(stage.stageEl, model, ALL_AREAS, VIEWS, {
+    onOpenDashboard: () => dashboard.open(),
+  });
   setBoot(0.15, 'Streaming plant geometry…');
   let stats;
   try {
@@ -88,6 +96,7 @@ async function start() {
 
   const tick = () => {
     sim.step(1);
+    dashboard.update();
     viewer.setAreaData((id) => {
       const area = ALL_AREAS.find((a) => a.id === id);
       return area ? areaStatus(sim, area) : null;
@@ -114,14 +123,15 @@ async function start() {
     // the view for a screenshot
     if (e.key.toLowerCase() === 'a') viewer.setHotspots(!viewer.showHotspots);
     if (e.key === 'Escape') {
-      if (viewer.openId) viewer.closeDetail();
+      if (dashboard.isOpen) dashboard.close();
+      else if (viewer.openId) viewer.closeDetail();
       else viewer.select(null);
     }
   });
 
   // Ask Bruce answers from this simulator, so it can only ever report what the
   // page is actually showing.
-  bruce = new Bruce(stage.stageEl, {
+  const bruce = new Bruce(stage.stageEl, {
     sim,
     areas: ALL_AREAS,
     onFocusArea: (id) => viewer.toggleDetail(id),
@@ -130,7 +140,7 @@ async function start() {
   // the panel shares the grid with the stage, so the canvas must re-measure
   new ResizeObserver(() => viewer.resize()).observe(stage.stageEl);
 
-  Object.assign(globalThis, { __twin: { sim, viewer, stage, bruce, meta: model } });
+  Object.assign(globalThis, { __twin: { sim, viewer, stage, bruce, dashboard, meta: model } });
 }
 
 start().catch((err) => {

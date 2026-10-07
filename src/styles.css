@@ -268,11 +268,6 @@ body { overflow: hidden; }
 .bruce__tab svg { width: 14px; height: 14px; }
 .bruce__tab:hover { color: var(--text-strong); }
 .bruce__tab[aria-selected='true'] { background: var(--surface-sunken); color: var(--text-strong); }
-.bruce__count {
-  min-width: 16px; height: 16px; padding: 0 4px; border-radius: 99px;
-  background: #f5333f; color: #fff; font-size: 9.5px; font-weight: 700;
-  display: grid; place-items: center; font-variant-numeric: tabular-nums;
-}
 
 .bruce__body { flex: 1 1 auto; min-height: 0; overflow-y: auto; padding: 2px 16px 12px; }
 .bruce__a { margin: 0 0 12px; font-size: 12px; line-height: 1.65; color: var(--text-body); }
@@ -392,16 +387,214 @@ body { overflow: hidden; }
 .as__acts li { font-size: 11.5px; color: var(--text-body); }
 
 /* ---------- BRUCE plant overview (opening state of Insights) ---------- */
-.ov { margin-bottom: 4px; }
-.ov__kpis { display: flex; gap: 8px; }
-.ov__kpi {
-  flex: 1 1 0; display: flex; flex-direction: column; gap: 1px;
-  padding: 8px 9px; border: 1px solid var(--hairline); border-radius: 8px; min-width: 0;
-}
-.ov__kpi i { font-style: normal; font-size: 8.5px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-faint); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.ov__kpi b { font-family: var(--font-display); font-size: 17px; font-weight: 700; font-variant-numeric: tabular-nums; color: var(--text-strong); line-height: 1.15; }
-.ov__kpi u { text-decoration: none; font-size: 9px; color: var(--text-faint); }
-.ov__kpi[data-band='good'] b { color: var(--band-good); }
-.ov__kpi[data-band='warn'] b { color: var(--band-warn); }
-.ov__kpi[data-band='crit'] b { color: var(--band-crit); }
+.ov { margin-bottom: 6px; }
+.ov__title { margin: 0 0 9px; font-size: 13px; font-weight: 700; color: var(--text-strong); }
+.ov__rows { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.ov__rows li { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+.ov__k { font-size: 11.5px; color: var(--text-muted); }
+.ov__v { font-size: 13.5px; font-weight: 700; font-variant-numeric: tabular-nums; color: var(--text-strong); }
+.ov__v[data-band='good'] { color: var(--band-good); }
+.ov__v[data-band='warn'] { color: var(--band-warn); }
+.ov__v[data-band='crit'] { color: var(--band-crit); }
 
+
+/* ============================================================
+   Kiln operator dashboard
+   ============================================================ */
+.dash {
+  position: fixed; inset: 0; z-index: 60;
+  display: flex; flex-direction: column;
+  background: #eef1f6; font-family: var(--font-ui);
+  overflow: hidden;
+}
+.dash[hidden] { display: none; }
+
+.dash__top {
+  flex: none; display: flex; align-items: center; justify-content: center;
+  position: relative; padding: 8px 14px; background: #fff;
+  border-bottom: 2px solid var(--blue-500);
+}
+.dash__clock { display: flex; flex-direction: column; align-items: center; line-height: 1.2; }
+.dash__clock b { font-size: 14px; font-weight: 700; color: var(--text-strong); font-variant-numeric: tabular-nums; }
+.dash__clock i { font-style: normal; font-size: 10px; color: var(--text-muted); }
+.dash__close {
+  position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+  width: 28px; height: 28px; display: grid; place-items: center;
+  border: 0; border-radius: 6px; background: none; color: var(--text-muted); cursor: pointer;
+}
+.dash__close svg { width: 17px; height: 17px; }
+.dash__close:hover { background: var(--surface-sunken); color: var(--text-strong); }
+
+.dash__rawmix { flex: none; display: flex; align-items: center; gap: 10px; padding: 8px 14px; background: #fff; }
+.dash__rawmix-label { flex: none; font-size: 11px; font-weight: 600; color: var(--text-body); }
+.dash__rawmix-row { flex: 1 1 auto; display: grid; grid-template-columns: repeat(15, minmax(0, 1fr)); gap: 5px; }
+.rm {
+  display: flex; flex-direction: column; align-items: center; gap: 0;
+  padding: 5px 2px; border: 1px solid var(--hairline); border-radius: 5px; min-width: 0;
+}
+.rm i { font-style: normal; font-size: 8px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+.rm b { font-size: 12px; font-weight: 700; color: var(--text-strong); font-variant-numeric: tabular-nums; }
+.rm u { text-decoration: none; font-size: 7.5px; color: var(--text-faint); white-space: nowrap; }
+
+.dash__tabs { flex: none; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 8px 14px; }
+.dash__tab {
+  display: flex; align-items: center; justify-content: center; gap: 7px;
+  padding: 9px; border: 0; border-radius: 6px; cursor: pointer;
+  background: #e7eaf0; font-family: inherit; font-size: 12px; font-weight: 600; color: var(--text-muted);
+}
+.dash__tab svg { width: 15px; height: 15px; }
+.dash__tab[aria-selected='true'] { background: #fff; color: var(--text-strong); box-shadow: 0 1px 3px rgba(16,36,64,.1); }
+
+.dash__grid { flex: 1 1 auto; min-height: 0; overflow-y: auto; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; padding: 0 14px 14px; }
+.dash__col { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.dash__trends { grid-column: 1 / -1; }
+
+.card { background: #fff; border: 1px solid var(--hairline); border-radius: 8px; padding: 10px 12px; min-width: 0; }
+.card--grow { flex: 1 1 auto; display: flex; flex-direction: column; }
+.card__h { display: flex; align-items: center; gap: 6px; margin-bottom: 9px; }
+.card__h svg { width: 14px; height: 14px; color: var(--blue-500); flex: none; }
+.card__h b { font-size: 12px; font-weight: 700; color: var(--text-strong); }
+.card__age { margin-left: auto; font-size: 9px; color: var(--text-faint); white-space: nowrap; }
+.card__hint { margin: 6px 0 0; font-size: 9px; color: var(--text-faint); text-align: center; }
+
+.met + .met { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--hairline); }
+.met__name { display: flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 600; color: var(--text-body); }
+.met__name svg { width: 12px; height: 12px; color: var(--text-faint); }
+.met__row { display: flex; align-items: baseline; gap: 10px; margin: 4px 0 7px; }
+.met__val b { font-family: var(--font-display); font-size: 21px; font-weight: 700; color: var(--text-strong); font-variant-numeric: tabular-nums; }
+.met__val u { text-decoration: none; font-size: 9.5px; color: var(--text-muted); margin-left: 3px; }
+.met__chips { flex: 1 1 auto; display: flex; flex-direction: column; gap: 1px; align-items: center; }
+.met__chips span { font-size: 9px; color: var(--text-body); background: var(--surface-sunken); border-radius: 3px; padding: 1px 5px; white-space: nowrap; }
+.met__chips i { font-style: normal; color: var(--text-muted); }
+.met__chips b { font-variant-numeric: tabular-nums; }
+.met__delta { margin-left: auto; font-size: 16px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.met__delta[data-sign='up'] { color: var(--band-warn); }
+.met__delta[data-sign='down'] { color: var(--band-crit); }
+
+.bar__track { position: relative; display: block; height: 7px; border-radius: 4px; background: #eef0f4; }
+.bar__fill { position: absolute; inset: 0; border-radius: 4px; background: #b7e4c6; }
+.bar__sp { position: absolute; top: -2px; width: 2px; height: 11px; background: var(--blue-500); transform: translateX(-1px); }
+.bar__dot { position: absolute; top: 50%; width: 9px; height: 9px; border-radius: 99px; background: #f0921c; border: 2px solid #fff; transform: translate(-50%, -50%); transition: left 600ms var(--ease-out); }
+.bar__labels { display: flex; justify-content: space-between; margin-top: 3px; }
+.bar__labels i { font-style: normal; font-size: 8.5px; color: var(--text-faint); font-variant-numeric: tabular-nums; }
+.bar__spl { color: var(--blue-500) !important; }
+
+.qc { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 5px; }
+.qc li { display: grid; grid-template-columns: 1fr auto auto; align-items: baseline; gap: 8px; padding: 7px 9px; border-radius: 5px; background: var(--surface-sunken); font-size: 11px; color: var(--text-body); }
+.qc b { font-variant-numeric: tabular-nums; font-size: 10.5px; color: var(--text-muted); font-weight: 600; }
+.qc i { font-style: normal; font-size: 10px; font-weight: 700; }
+.qc i[data-state='low'] { color: var(--band-crit); }
+.qc i[data-state='high'] { color: var(--band-warn); }
+.qc i[data-state='ok'] { color: var(--band-good); }
+
+.gauges { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.gauge { display: flex; flex-direction: column; align-items: center; }
+.gauge__name { font-size: 10px; font-weight: 700; color: var(--blue-500); }
+.gauge__svg { width: 100%; max-width: 150px; }
+.gauge__tick { font-size: 7px; fill: #9aa3b2; }
+.gauge__val b { font-family: var(--font-display); font-size: 16px; font-weight: 700; color: var(--text-strong); font-variant-numeric: tabular-nums; }
+.gauge__val { font-size: 9.5px; color: var(--text-muted); }
+.gauge__delta { font-size: 10px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.gauge__delta[data-sign='up'] { color: var(--band-warn); }
+.gauge__delta[data-sign='down'] { color: var(--band-crit); }
+.gauge__target { font-size: 8.5px; color: var(--blue-500); }
+
+.schem { position: relative; flex: 1 1 auto; display: flex; align-items: center; justify-content: center; padding: 4px 0; }
+.schem__img { display: block; width: 100%; max-width: 330px; height: auto; }
+.schem__tag {
+  position: absolute; transform: translate(-50%, -50%);
+  display: flex; flex-direction: column; align-items: center; line-height: 1.25;
+  padding: 2px 5px; border: 1px solid var(--hairline); border-radius: 4px;
+  background: rgba(255, 255, 255, 0.95); color: var(--text-muted);
+  font-size: 8px; white-space: nowrap;
+  box-shadow: 0 1px 3px rgba(16, 36, 64, 0.12);
+}
+.schem__tag i { font-style: normal; font-size: 7px; }
+.schem__tag b { font-size: 9.5px; color: var(--text-strong); font-variant-numeric: tabular-nums; }
+
+
+/* the card's route into the dashboard */
+.detail__dash {
+  display: flex; align-items: center; justify-content: center; gap: 7px; width: 100%;
+  margin-top: 10px; padding: 8px; border: 1px solid var(--hairline); border-radius: 8px;
+  background: #fff; cursor: pointer; font-family: inherit;
+  font-size: 11.5px; font-weight: 600; color: var(--text-strong);
+}
+.detail__dash svg { width: 14px; height: 14px; color: var(--blue-500); }
+.detail__dash:hover { border-color: var(--blue-400); color: var(--blue-600); }
+
+@media (max-width: 1200px) {
+  .dash__grid { grid-template-columns: 1fr 1fr; }
+  .dash__rawmix-row { grid-template-columns: repeat(8, minmax(0, 1fr)); }
+}
+
+/* ---------- schematic: selectable equipment ---------- */
+.schem__hit {
+  position: absolute; inset: 0; width: 100%; height: 100%;
+  pointer-events: none;
+}
+.schem__region {
+  fill: transparent; stroke: transparent; stroke-width: 0.6;
+  pointer-events: auto; cursor: pointer;
+  transition: fill 160ms var(--ease-out), stroke 160ms var(--ease-out);
+}
+.schem__region:hover { fill: rgba(22, 85, 242, 0.14); stroke: rgba(22, 85, 242, 0.6); }
+.schem__region:focus-visible { outline: none; fill: rgba(22, 85, 242, 0.16); stroke: var(--blue-500); }
+/* the selected piece is tinted, as a highlighted machine would be on a mimic */
+.schem[data-selected='preheater'] [data-region='preheater'],
+.schem[data-selected='calciner'] [data-region='calciner'],
+.schem[data-selected='kiln'] [data-region='kiln'],
+.schem[data-selected='cooler'] [data-region='cooler'] {
+  fill: rgba(204, 34, 41, 0.3);
+  stroke: #cc2229;
+  stroke-width: 0.8;
+}
+
+.schem__chip {
+  position: absolute; transform: translate(-50%, -50%);
+  padding: 3px 9px; border-radius: 5px; cursor: pointer;
+  border: 1px solid var(--hairline); background: #fff;
+  font-family: inherit; font-size: 9.5px; font-weight: 700; color: var(--text-body);
+  box-shadow: 0 1px 3px rgba(16, 36, 64, 0.12); white-space: nowrap;
+  transition: background 160ms var(--ease-out), color 160ms var(--ease-out), border-color 160ms var(--ease-out);
+}
+.schem__chip:hover { border-color: var(--blue-400); color: var(--blue-600); }
+.schem[data-selected='preheater'] .schem__chip[data-region='preheater'],
+.schem[data-selected='calciner'] .schem__chip[data-region='calciner'],
+.schem[data-selected='kiln'] .schem__chip[data-region='kiln'],
+.schem[data-selected='cooler'] .schem__chip[data-region='cooler'] {
+  background: #cc2229; border-color: #cc2229; color: #fff;
+}
+
+/* the matching card acknowledges the selection */
+.card.is-flash { animation: cardFlash 1.3s var(--ease-out) 1; }
+@keyframes cardFlash {
+  0% { box-shadow: 0 0 0 0 rgba(204, 34, 41, 0.45); border-color: #cc2229; }
+  100% { box-shadow: 0 0 0 10px rgba(204, 34, 41, 0); border-color: var(--hairline); }
+}
+
+/* ---------- trend charts ---------- */
+.trend { grid-column: 1 / -1; display: flex; flex-direction: column; gap: 10px; }
+.trend__bar {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 8px 12px; background: #fff; border: 1px solid var(--hairline); border-radius: 8px;
+}
+.trend__range { display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 600; color: var(--text-body); }
+.trend__range svg { width: 14px; height: 14px; color: var(--blue-500); }
+.trend__window { display: flex; flex-direction: column; align-items: flex-end; line-height: 1.3; }
+.trend__window i { font-style: normal; font-size: 9.5px; color: var(--blue-500); font-weight: 700; }
+.trend__window b { font-size: 10px; font-weight: 600; color: var(--text-muted); font-variant-numeric: tabular-nums; }
+
+.trend__grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.trend__card { display: flex; flex-direction: column; }
+.trend__title { color: var(--blue-600) !important; font-size: 11px !important; }
+.trend__legend { display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 9px; color: var(--text-muted); }
+.trend__legend i { width: 14px; height: 2px; background: #f0a81c; border-radius: 2px; }
+
+.chart { width: 100%; }
+.chart__svg { width: 100%; height: 150px; display: block; }
+.chart__ytick, .chart__xtick { font-size: 8px; fill: #8a93a5; }
+.chart__ylabel { font-size: 8px; fill: #8a93a5; }
+.chart__lim { font-size: 8px; fill: #2f9e5a; font-weight: 600; }
+
+@media (max-width: 1200px) { .trend__grid { grid-template-columns: 1fr; } }

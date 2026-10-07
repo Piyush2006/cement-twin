@@ -83,7 +83,8 @@ function edgeOfBox(ax, ay, cx, cy, halfW, halfH) {
 const SKY = 0xf4f7fb;
 
 export class PlantViewer {
-  constructor(container, meta, areas = [], views = []) {
+  constructor(container, meta, areas = [], views = [], { onOpenDashboard } = {}) {
+    this.onOpenDashboard = onOpenDashboard;
     this.container = container;
     this.meta = meta;
     this.assets = meta.assets;
@@ -367,6 +368,7 @@ export class PlantViewer {
       e.stopPropagation();
       const act = e.target.closest('[data-act]')?.dataset.act;
       if (act === 'close') this.closeDetail();
+      if (act === 'dashboard') this.onOpenDashboard?.(this.pins.get(this.openId)?.area);
     });
   }
 
@@ -425,6 +427,11 @@ export class PlantViewer {
         <span class="detail__kpi"><i>Energy</i>${
           d.sec == null ? '\u2014' : `${d.sec.toFixed(0)} <u>${d.secUnit}</u>`}</span>
       </div>
+      ${d.hasDashboard ? `
+      <button class="detail__dash" type="button" data-act="dashboard" title="Open the ${a.name} dashboard">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+        Open Dashboard
+      </button>` : ''}
 `;
 
     this.detail.innerHTML = `

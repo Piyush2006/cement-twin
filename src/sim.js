@@ -13,8 +13,11 @@
 
 import { PROFILES, PLANT_TAGS, STAGES, SIM_HOURS_PER_TICK } from './data/process.js';
 import { EQUIPMENT_TAGS, AREA_OEE } from './data/equipment.js';
+import { dashboardTags } from './data/kiln-dashboard.js';
 
-const HISTORY = 90;
+// 120 samples at SIM_HOURS_PER_TICK (0.2 h) is 24 simulated hours — the window
+// the trend charts plot. Raising it costs one float per tag per sample.
+const HISTORY = 120;
 const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
 
 /** Deterministic PRNG so a reload replays comparable conditions. */
@@ -143,6 +146,21 @@ export class Simulator {
       mk('PERF', 'Performance', prof.p, 3.6, [55, 68, null, null], 1);
       mk('QUAL', 'Quality', prof.q, 0.5, [94, 96.5, null, null], 2);
       mk('OUTPUT', 'Output rate', prof.rated * (prof.p / 100), prof.rated * 0.05, [null, null, null, null], 1);
+    }
+
+    // Kiln faceplate tags. Registered like any other so the dashboard reads
+    // live; lab results are given a long time constant because they come from
+    // a sample, not an instrument.
+    for (const d of dashboardTags()) {
+      this.#register({
+        code: `kd:${d.code}`,
+        name: d.label,
+        unit: d.unit ?? '',
+        base: d.base,
+        swing: d.lab ? d.swing * 0.12 : d.swing,
+        limits: d.lsl != null ? [null, d.lsl, d.usl, null] : [null, null, null, null],
+        decimals: d.decimals ?? 2,
+      });
     }
 
     this.#seedHistory();
@@ -442,9 +460,11 @@ export class Simulator {
   plantKpis(areaIds) {
     const scored = areaIds.map((id) => this.assessArea(id)).filter((a) => a.health != null);
     const health = scored.length ? scored.reduce((t, a) => t + a.health, 0) / scored.length : null;
+    const withOee = areaIds.map((id) => this.oeeOfArea(id)).filter(Boolean);
     return {
-      production: { value: this.state.CM_TPH, unit: 't/h', perDay: this.state.CM_TPH * 24 },
       health,
+      oee: withOee.length ? withOee.reduce((t, o) => t + o.oee, 0) / withOee.length : null,
+      production: { value: this.state.CM_TPH, unit: 't/h', perDay: this.state.CM_TPH * 24 },
       energy: { sec: this.state.PH_SHC, power: this.state.SPEC_POWER },
     };
   }
