@@ -691,3 +691,48 @@ body { overflow: hidden; }
   background: var(--tint-blue); border: 1px solid var(--hairline);
   padding: 7px 9px; line-height: 1.5;
 }
+
+/* ---------- equipment KPI cards ----------
+   The three figures an operator reads before opening BRUCE. Stacked rather
+   than in a row: the panel is narrow, and a label, a value with its unit and
+   a status word do not fit side by side without truncating one of them.
+   Colour follows the existing band tokens, so these read as part of the twin
+   rather than a second visual language. */
+.detail__kpis--cards { gap: 6px; }
+.kpicard {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  grid-template-areas: 'label value' 'status value';
+  align-items: baseline; column-gap: 10px;
+  padding: 7px 9px;
+  background: var(--surface-raised);
+  border: 1px solid var(--hairline);
+  border-left: 2px solid var(--hairline-strong);
+  border-radius: 6px;
+}
+.kpicard i {
+  grid-area: label; font-style: normal;
+  font-size: 10.5px; font-weight: 500; color: var(--text-muted);
+}
+.kpicard b {
+  grid-area: value; align-self: center;
+  font-size: 15px; font-weight: 700; font-variant-numeric: tabular-nums;
+  color: var(--text-strong); white-space: nowrap;
+}
+.kpicard b u {
+  text-decoration: none; margin-left: 3px;
+  font-size: 9.5px; font-weight: 600; color: var(--text-faint);
+}
+.kpicard em {
+  grid-area: status; font-style: normal;
+  font-size: 10px; font-weight: 600; color: var(--text-faint);
+}
+.kpicard[data-band='good'] { border-left-color: var(--band-good); }
+.kpicard[data-band='warn'] { border-left-color: var(--band-warn); }
+.kpicard[data-band='crit'] { border-left-color: var(--band-crit); }
+.kpicard[data-band='good'] em { color: var(--band-good); }
+.kpicard[data-band='warn'] em { color: var(--band-warn); }
+.kpicard[data-band='crit'] em { color: var(--band-crit); }
+.kpicard[data-band='good'] b,
+.kpicard[data-band='warn'] b,
+.kpicard[data-band='crit'] b { color: var(--text-strong); }

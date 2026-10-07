@@ -419,6 +419,15 @@ export class PlantViewer {
     // The twin surface stays free of figures; these three appear only once the
     // card is expanded. Everything beyond them belongs to BRUCE.
     const metrics = `
+      ${d.kpis?.length ? `
+      <div class="detail__kpis detail__kpis--cards">
+        ${d.kpis.map((k) => `
+        <span class="kpicard" data-band="${k.status?.[1] ?? 'none'}">
+          <i>${k.label}</i>
+          <b>${k.value == null ? '\u2014' : k.value.toFixed(k.decimals)}<u>${k.unit}</u></b>
+          <em>${k.status?.[0] ?? ''}</em>
+        </span>`).join('')}
+      </div>` : `
       <div class="detail__kpis">
         <span class="detail__kpi"><i>Production</i>${
           d.output == null ? '\u2014' : `${d.output.toFixed(0)} <u>/ ${d.rated} ${d.unit}</u>`}</span>
@@ -426,7 +435,7 @@ export class PlantViewer {
           d.health == null ? '\u2014' : `${d.health.toFixed(0)} <u>/100</u>`}</span>
         <span class="detail__kpi"><i>Energy</i>${
           d.sec == null ? '\u2014' : `${d.sec.toFixed(0)} <u>${d.secUnit}</u>`}</span>
-      </div>
+      </div>`}
       ${d.hasDashboard ? `
       <button class="detail__dash" type="button" data-act="dashboard" title="Open the ${a.name} dashboard">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>

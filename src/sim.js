@@ -14,6 +14,7 @@
 import { PROFILES, PLANT_TAGS, STAGES, SIM_HOURS_PER_TICK } from './data/process.js';
 import { EQUIPMENT_TAGS, AREA_OEE } from './data/equipment.js';
 import { dashboardTags } from './data/kiln-dashboard.js';
+import { KPI_TAGS } from './data/area-kpis.js';
 
 // 120 samples at SIM_HOURS_PER_TICK (0.2 h) is 24 simulated hours — the window
 // the trend charts plot. Raising it costs one float per tag per sample.
@@ -160,6 +161,21 @@ export class Simulator {
         swing: d.lab ? d.swing * 0.12 : d.swing,
         limits: d.lsl != null ? [null, d.lsl, d.usl, null] : [null, null, null, null],
         decimals: d.decimals ?? 2,
+      });
+    }
+
+    // Areas the process model leaves uninstrumented still lead with three KPIs
+    // on the twin, so their tags are registered here and walked like any other
+    // rather than being written into the panel as fixed text.
+    for (const d of KPI_TAGS) {
+      this.#register({
+        code: d.code,
+        name: d.name,
+        unit: d.unit,
+        base: d.base,
+        swing: d.swing,
+        limits: [null, null, null, null],
+        decimals: d.decimals,
       });
     }
 

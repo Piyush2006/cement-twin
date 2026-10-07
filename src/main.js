@@ -14,6 +14,7 @@ import { Bruce } from './bruce.js';
 import { KilnDashboard } from './dashboard.js';
 import { VIEWS, PROFILES } from './data/process.js';
 import { ALL_AREAS } from './data/areas.js';
+import { areaKpis } from './data/area-kpis.js';
 
 
 const MODEL_URL = `${import.meta.env.BASE_URL}models/plant.glb`;
@@ -41,6 +42,8 @@ function areaStatus(sim, area) {
   const oee = sim.oeeOfArea(area.id);
   const health = a.health;
   return {
+    // the three figures the detail panel leads with, chosen per equipment
+    kpis: areaKpis(area.id, { oee, assess: a, state: sim.state }),
     health,
     healthBand: health == null ? 'none' : health >= 85 ? 'good' : health >= 70 ? 'warn' : 'crit',
     output: oee?.output ?? null,
