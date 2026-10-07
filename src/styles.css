@@ -598,3 +598,37 @@ body { overflow: hidden; }
 .chart__lim { font-size: 8px; fill: #2f9e5a; font-weight: 600; }
 
 @media (max-width: 1200px) { .trend__grid { grid-template-columns: 1fr; } }
+
+/* ---------- annotation switch ----------
+   The pills are the only UI on the plant, so this is the one control that stays
+   on the canvas. It sits top-left, clear of BRUCE in the bottom-right, and
+   above the pin layer the viewer appends after it. */
+.switch {
+  position: absolute; top: 14px; left: 14px; z-index: 28;
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 6px 11px 6px 8px;
+  border: 1px solid var(--hairline); border-radius: 999px;
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: var(--shadow-sm);
+  cursor: pointer; user-select: none;
+  font-size: 11.5px; font-weight: 600; letter-spacing: 0.01em;
+  color: var(--text-body);
+}
+.switch:hover { border-color: var(--blue-300); color: var(--text-strong); }
+.switch__box { position: absolute; opacity: 0; width: 0; height: 0; }
+.switch__track {
+  position: relative; flex: none; width: 28px; height: 16px;
+  border-radius: 999px; background: var(--hairline-strong);
+  transition: background 150ms var(--ease-out);
+}
+.switch__knob {
+  position: absolute; top: 2px; left: 2px; width: 12px; height: 12px;
+  border-radius: 50%; background: #fff;
+  box-shadow: 0 1px 2px rgba(16, 36, 64, 0.3);
+  transition: transform 150ms var(--ease-out);
+}
+/* Checked is the default, so the off state has to be drawn explicitly — an
+   unstyled switch reads as missing, which is how this control got lost before. */
+.switch__box:checked + .switch__track { background: var(--blue-500); }
+.switch__box:checked + .switch__track .switch__knob { transform: translateX(12px); }
+.switch__box:focus-visible + .switch__track { outline: 2px solid var(--blue-300); outline-offset: 2px; }

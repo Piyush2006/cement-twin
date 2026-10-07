@@ -72,6 +72,8 @@ async function start() {
   const viewer = new PlantViewer(stage.stageEl, model, ALL_AREAS, VIEWS, {
     onOpenDashboard: () => dashboard.open(),
   });
+
+  stage.onAnnotations((on) => viewer.setHotspots(on));
   setBoot(0.15, 'Streaming plant geometry…');
   let stats;
   try {
@@ -115,13 +117,18 @@ async function start() {
 
   // keyboard: 1-4 jump between camera presets, Esc clears selection
   addEventListener('keydown', (e) => {
-    if (e.target.matches('input, textarea')) return;
+    // Only text entry swallows the shortcuts — the annotation checkbox is an
+    // <input> too, and focusing it must not kill every key on the page.
+    if (e.target.matches('textarea, input:not([type=checkbox]):not([type=radio])')) return;
     // presets kept on the number keys after their buttons were removed
     const n = Number(e.key);
     if (n >= 1 && n <= VIEWS.length) viewer.frame(VIEWS[n - 1], VIEWS);
-    // no on-screen control for this any more; the key stays as a way to clear
-    // the view for a screenshot
-    if (e.key.toLowerCase() === 'a') viewer.setHotspots(!viewer.showHotspots);
+    // the switch is the visible control; the key is the shortcut for it, and
+    // has to write back so the two never disagree
+    if (e.key.toLowerCase() === 'a') {
+      viewer.setHotspots(!viewer.showHotspots);
+      stage.setAnnotations(viewer.showHotspots);
+    }
     if (e.key === 'Escape') {
       if (dashboard.isOpen) dashboard.close();
       else if (viewer.openId) viewer.closeDetail();
