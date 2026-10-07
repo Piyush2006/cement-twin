@@ -125,10 +125,6 @@ export class Bruce {
       if (q) { this.input.value = ''; this.#ask(q); }
     });
     this.bodyEl.addEventListener('click', (e) => {
-      // a follow-up chip asks its own question, so the operator can walk the
-      // flow without retyping
-      const ask = e.target.closest('[data-ask]')?.dataset.ask;
-      if (ask) { this.#ask(ask); return; }
       const id = e.target.closest('[data-area]')?.dataset.area;
       if (id) this.onFocusArea?.(id);
     });
@@ -569,7 +565,6 @@ export class Bruce {
           <li data-status="${w.status}"><i>${w.label}</i><b>${num(w)} ${w.unit}</b>${
             w.status === 'low' || w.status === 'high' ? `<em>${STATUS_WORD[w.status]}</em>` : ''
           }</li>`).join('')}</ul>
-        ${this.#followUps(['Why is SHC high?', 'What should we do?'])}
       </section>`;
   }
 
@@ -589,7 +584,6 @@ export class Bruce {
           : '<p class="as__p">No contributor is outside its band at this moment.</p>'}
         <p class="kpi__conf"><span>Confidence</span><b>${SHC_CONFIDENCE.level}</b></p>
         <p class="as__p">${SHC_CONFIDENCE.because}</p>
-        ${this.#followUps(['What should we do?'])}
       </section>`;
   }
 
@@ -602,13 +596,6 @@ export class Bruce {
         <h5 class="as__h">Logic</h5>
         <p class="kpi__chain">${SHC_CHAIN.join(' \u2192 ')}</p>
       </section>`;
-  }
-
-  /** Chips that ask the next question in the flow. */
-  #followUps(qs) {
-    return `<div class="bruce__chips">${qs
-      .map((q) => `<button class="bruce__chip" type="button" data-ask="${q}">${q}</button>`)
-      .join('')}</div>`;
   }
 
   async #ask(q) {
